@@ -51,10 +51,10 @@ const Navbar = () => {
           <ThemeToggle />
 
           <Link
-            to="/login"
+            to="/register"
             className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
           >
-            Login
+            Register
           </Link>
         </div>
 
