@@ -18,11 +18,11 @@ const Navbar = () => {
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 font-bold text-white shadow-lg shadow-indigo-600/20">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-xl font-bold text-white shadow-lg shadow-indigo-600/20">
             Q
           </div>
 
-          <span className="text-xl font-bold tracking-tight">
+          <span className="text-2xl font-bold tracking-tight">
             Quiz<span className="text-indigo-600">Nest</span>
           </span>
         </Link>
