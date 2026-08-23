@@ -1,7 +1,7 @@
 import { Menu, X } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useState } from "react";
-// import ThemeToggle from "./ThemeToggle";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -48,7 +48,7 @@ const Navbar = () => {
 
         {/* Right side */}
         <div className="hidden items-center gap-3 md:flex">
-          {/* <ThemeToggle /> */}
+          <ThemeToggle />
 
           <Link
             to="/login"
@@ -60,7 +60,7 @@ const Navbar = () => {
 
         {/* Mobile */}
         <div className="flex items-center gap-2 md:hidden">
-          {/* <ThemeToggle /> */}
+          <ThemeToggle />
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
