@@ -3,6 +3,7 @@ import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useAuth } from "../context/AuthContext";
 
 import api from "../lib/axios";
 import { setAuthData } from "../lib/auth";
@@ -14,6 +15,8 @@ import type {
 
 const Login = () => {
   const navigate = useNavigate();
+
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState<LoginRequest>({
     email: "",

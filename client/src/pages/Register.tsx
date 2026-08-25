@@ -2,6 +2,8 @@ import { FormEvent, useState } from "react";
 import { CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
+
+import { useAuth } from "../context/AuthContext";
 import api from "../lib/axios";
 import { toast } from "react-toastify";
 import { setAuthData } from "../lib/auth";
@@ -13,6 +15,8 @@ import type {
 
 const Register = () => {
   const navigate = useNavigate();
+
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState<RegisterRequest>({
     name: "",
@@ -55,7 +59,7 @@ const Register = () => {
       const { token, user, message } = response.data;
 
       // Store authentication data
-      setAuthData(token, user);
+      login(token, user);
 
       toast.success(message || "User registered successfully.");
 

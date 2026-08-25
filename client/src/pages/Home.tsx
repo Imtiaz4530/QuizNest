@@ -1,6 +1,8 @@
 import { ArrowRight, CheckCircle2, Trophy, Users, Brain } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useAuth } from "../context/AuthContext";
+
 const Home = () => {
   const categories = [
     {
@@ -55,6 +57,9 @@ const Home = () => {
       attempts: "8.2K",
     },
   ];
+
+  const { user, token } = useAuth();
+  console.log(user, token);
 
   return (
     <>

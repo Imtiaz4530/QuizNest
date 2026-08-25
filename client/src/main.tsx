@@ -5,18 +5,21 @@ import { ToastContainer } from "react-toastify";
 
 import "./index.css";
 import { router } from "./router";
+import { AuthProvider } from "./context/AuthContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
 
-    <ToastContainer
-      position="top-right"
-      autoClose={4000}
-      newestOnTop
-      closeOnClick
-      pauseOnHover
-      theme="colored"
-    />
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="colored"
+      />
+    </AuthProvider>
   </StrictMode>,
 );
