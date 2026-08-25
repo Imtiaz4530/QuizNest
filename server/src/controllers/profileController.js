@@ -61,7 +61,7 @@ const updateMyProfile = async (req, res) => {
     }
 
     if (phone !== undefined) {
-      profile.phone = phone;
+      profile.phone = "880" + phone;
     }
 
     if (bio !== undefined) {
