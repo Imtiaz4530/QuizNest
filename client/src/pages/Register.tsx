@@ -35,45 +35,6 @@ const Register = () => {
     }));
   };
 
-  // const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault();
-
-  //   // Client-side password validation
-  //   if (formData.password !== formData.confirmPassword) {
-  //     toast.error("Passwords do not match.");
-  //     return;
-  //   }
-
-  //   try {
-  //     setLoading(true);
-
-  //     const response = await axios.post<RegisterResponse>(
-  //       "/users/auth/register",
-  //       formData,
-  //     );
-
-  //     const { token, user, message } = response.data;
-
-  //     // Store authentication data
-  //     setAuthData(token, user);
-
-  //     toast.success(message || "User registered successfully.");
-
-  //     // User is now authenticated.
-  //     navigate("/", { replace: true });
-  //   } catch (error) {
-  //     if (axios.isAxiosError<ApiErrorResponse>(error)) {
-  //       toast.error(
-  //         error.response?.data?.message ||
-  //           "Unable to create your account. Please try again.",
-  //       );
-  //     } else {
-  //       toast.error("Something went wrong. Please try again.");
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 

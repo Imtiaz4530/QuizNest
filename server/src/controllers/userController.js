@@ -102,8 +102,6 @@ const loginUser = async (req, res) => {
       email: email.toLowerCase().trim(),
     }).select("+password");
 
-    console.log(user);
-
     // Don't reveal whether the email exists
     if (!user) {
       return res.status(401).json({
