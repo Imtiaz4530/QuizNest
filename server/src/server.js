@@ -10,6 +10,7 @@ const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const profileRoutes = require("./routes/profileRoutes.js");
 const categoryRoutes = require("./routes/categoryRoutes.js");
+const examRoutes = require("./routes/examRoutes.js");
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/api/profiles", profileRoutes);
 
 // admin routes
 app.use("/api/categories", categoryRoutes);
+app.use("/api/exams", examRoutes);
 
 const PORT = process.env.PORT || 5000;
 

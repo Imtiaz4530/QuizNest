@@ -12,17 +12,10 @@ const { adminOnly, protect } = require("../middlewares/authMiddleware.js");
 
 const router = express.Router();
 
-// All category routes require admin authentication
-router.use(protect, adminOnly);
-
-router.post("/", createCategory);
-
-router.get("/", getCategories);
-
-router.get("/:id", getCategoryById);
-
-router.patch("/:id", updateCategory);
-
-router.delete("/:id", deleteCategory);
+router.post("/", protect, adminOnly, createCategory);
+router.get("/", protect, getCategories);
+router.get("/:id", protect, getCategoryById);
+router.patch("/:id", protect, adminOnly, updateCategory);
+router.delete("/:id", protect, adminOnly, deleteCategory);
 
 module.exports = router;
