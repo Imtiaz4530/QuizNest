@@ -9,6 +9,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const profileRoutes = require("./routes/profileRoutes.js");
+const categoryRoutes = require("./routes/categoryRoutes.js");
 
 dotenv.config();
 
@@ -27,6 +28,9 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/profiles", profileRoutes);
+
+// admin routes
+app.use("/api/categories", categoryRoutes);
 
 const PORT = process.env.PORT || 5000;
 
