@@ -1,7 +1,9 @@
 import { FormEvent, useState } from "react";
 import { CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "../lib/axios";
+import { isAxiosError } from "axios";
+import api from "../lib/axios";
+import { toast } from "react-toastify";
 import { setAuthData } from "../lib/auth";
 import type {
   ApiErrorResponse,
@@ -23,7 +25,6 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,28 +33,60 @@ const Register = () => {
       ...prev,
       [name]: value,
     }));
-
-    // Remove previous error when user starts correcting the form.
-    if (error) {
-      setError("");
-    }
   };
 
+  // const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+
+  //   // Client-side password validation
+  //   if (formData.password !== formData.confirmPassword) {
+  //     toast.error("Passwords do not match.");
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+
+  //     const response = await axios.post<RegisterResponse>(
+  //       "/users/auth/register",
+  //       formData,
+  //     );
+
+  //     const { token, user, message } = response.data;
+
+  //     // Store authentication data
+  //     setAuthData(token, user);
+
+  //     toast.success(message || "User registered successfully.");
+
+  //     // User is now authenticated.
+  //     navigate("/", { replace: true });
+  //   } catch (error) {
+  //     if (axios.isAxiosError<ApiErrorResponse>(error)) {
+  //       toast.error(
+  //         error.response?.data?.message ||
+  //           "Unable to create your account. Please try again.",
+  //       );
+  //     } else {
+  //       toast.error("Something went wrong. Please try again.");
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setError("");
-
     // Client-side password validation
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
 
     try {
       setLoading(true);
 
-      const response = await axios.post<RegisterResponse>(
+      const response = await api.post<RegisterResponse>(
         "/users/auth/register",
         formData,
       );
@@ -63,19 +96,17 @@ const Register = () => {
       // Store authentication data
       setAuthData(token, user);
 
-      console.log(message);
-      console.log("Registered user:", user);
+      toast.success(message || "User registered successfully.");
 
-      // User is now authenticated.
       navigate("/", { replace: true });
-    } catch (error) {
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        setError(
+    } catch (error: unknown) {
+      if (isAxiosError<ApiErrorResponse>(error)) {
+        toast.error(
           error.response?.data?.message ||
             "Unable to create your account. Please try again.",
         );
       } else {
-        setError("Something went wrong. Please try again.");
+        toast.error("Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -161,16 +192,6 @@ const Register = () => {
               Join QuizNest and start your preparation today.
             </p>
           </div>
-
-          {/* Error */}
-          {error && (
-            <div
-              role="alert"
-              className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400"
-            >
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             {/* Name */}
