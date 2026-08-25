@@ -5,6 +5,7 @@ import Home from "../pages/Home";
 import Register from "../pages/Register";
 import Login from "../pages/Login";
 import Profile from "../pages/Profile";
+import Categories from "../pages/Categories";
 
 import NotFound from "../pages/NotFount";
 
@@ -20,10 +21,10 @@ export const router = createBrowserRouter([
         index: true,
         element: <Home />,
       },
-      //   {
-      //     path: "categories",
-      //     element: <Categories />,
-      //   },
+      {
+        path: "categories",
+        element: <Categories />,
+      },
       //   {
       //     path: "leaderboard",
       //     element: <Leaderboard />,
