@@ -6,7 +6,6 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
 import api from "../lib/axios";
-import { setAuthData } from "../lib/auth";
 import type {
   ApiErrorResponse,
   LoginRequest,
@@ -49,7 +48,7 @@ const Login = () => {
       const { token, user, message } = response.data;
 
       // Store JWT + authenticated user
-      setAuthData(token, user);
+      login(token, user);
 
       toast.success(message || "Login successful!");
 

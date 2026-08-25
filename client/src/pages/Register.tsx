@@ -6,7 +6,6 @@ import { isAxiosError } from "axios";
 import { useAuth } from "../context/AuthContext";
 import api from "../lib/axios";
 import { toast } from "react-toastify";
-import { setAuthData } from "../lib/auth";
 import type {
   ApiErrorResponse,
   RegisterRequest,
