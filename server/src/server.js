@@ -12,6 +12,7 @@ const profileRoutes = require("./routes/profileRoutes.js");
 const categoryRoutes = require("./routes/categoryRoutes.js");
 const examRoutes = require("./routes/examRoutes.js");
 const questionRoutes = require("./routes/questionRoutes.js");
+const quizAttemptRoutes = require("./routes/quizAttemptRoutes.js");
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/profiles", profileRoutes);
+app.use("/api/quiz-attempts", quizAttemptRoutes);
 
 // admin routes
 app.use("/api/categories", categoryRoutes);
