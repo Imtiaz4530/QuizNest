@@ -35,13 +35,13 @@ const profileSchema = new mongoose.Schema(
     educationLevel: {
       type: String,
       enum: ["SSC", "HSC", "Undergraduate", "Graduate", "Other"],
-      default: "",
+      default: "SSC",
     },
 
     group: {
       type: String,
       enum: ["science", "arts", "commerce"],
-      default: "",
+      default: "science",
     },
 
     examPreferences: [
