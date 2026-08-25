@@ -86,7 +86,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-slate-100 dark:hover:bg-slate-900"
+                className="flex items-center gap-2 rounded-xl px-2 py-1.5 cursor-pointer transition hover:bg-slate-100 dark:hover:bg-slate-900"
               >
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
                   {user?.name?.charAt(0).toUpperCase()}
@@ -143,7 +143,7 @@ const Navbar = () => {
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:hover:bg-red-950/30"
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm cursor-pointer font-medium text-red-600 transition hover:bg-red-50 dark:hover:bg-red-950/30"
                     >
                       <LogOut size={17} />
                       Logout

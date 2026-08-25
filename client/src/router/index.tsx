@@ -2,9 +2,14 @@ import { createBrowserRouter } from "react-router-dom";
 
 import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/Home";
-import NotFound from "../pages/NotFount";
 import Register from "../pages/Register";
 import Login from "../pages/Login";
+import Profile from "../pages/Profile";
+
+import NotFound from "../pages/NotFount";
+
+import ProtectedRoute from "../components/ProtectedRoute";
+import GuestRoute from "../components/GuestRoute";
 
 export const router = createBrowserRouter([
   {
@@ -27,13 +32,30 @@ export const router = createBrowserRouter([
       //     path: "about",
       //     element: <About />,
       //   },
+      // Guest-only routes
       {
-        path: "register",
-        element: <Register />,
+        element: <GuestRoute />,
+        children: [
+          {
+            path: "/login",
+            element: <Login />,
+          },
+          {
+            path: "/register",
+            element: <Register />,
+          },
+        ],
       },
+
+      // Protected routes
       {
-        path: "login",
-        element: <Login />,
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: "/profile",
+            element: <Profile />,
+          },
+        ],
       },
     ],
   },
