@@ -47,6 +47,11 @@ const registerUser = async (req, res) => {
       avatar: avatar || "",
     });
 
+    // Create user's profile
+    await Profile.create({
+      userId: user._id,
+    });
+
     // Create JWT token
     const token = jwt.sign(
       {
