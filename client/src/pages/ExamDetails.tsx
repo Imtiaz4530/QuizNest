@@ -7,6 +7,7 @@ import {
   Clock3,
   FileQuestion,
   Loader2,
+  Trophy,
   Users,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -117,102 +118,99 @@ const ExamDetails = () => {
         </Link>
 
         {/* Hero */}
-        <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="p-6 sm:p-8 lg:p-10">
-            <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+        <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="p-7 sm:p-10">
+            <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
               {/* Exam info */}
               <div className="max-w-3xl">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
-                    {exam.icon ? (
-                      <span className="text-2xl">{exam.icon}</span>
-                    ) : (
-                      <BookOpen size={28} />
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                      {exam.categoryId?.name}
-                    </p>
-
-                    <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-                      {exam.title}
-                    </h1>
-                  </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+                    {exam?.categoryId?.name}
+                  </span>
+                  {exam.isPopular && (
+                    <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                      Popular
+                    </span>
+                  )}
                 </div>
 
-                <p className="mt-6 text-base leading-7 text-slate-600 dark:text-slate-400">
+                <h1 className="mt-5 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
+                  {exam.title}
+                </h1>
+
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-500 dark:text-slate-400">
                   {exam.description}
                 </p>
 
-                {exam.isPopular && (
-                  <div className="mt-5 inline-flex items-center rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
-                    Popular Exam
+                {/* Stats */}
+                <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/60">
+                    <FileQuestion
+                      size={20}
+                      className="text-indigo-600 dark:text-indigo-400"
+                    />
+                    <p className="mt-3 text-xs text-slate-400">
+                      Available Questions
+                    </p>
+                    <p className="mt-1 font-bold text-slate-900 dark:text-white">
+                      {1578}
+                    </p>
                   </div>
-                )}
+
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/60">
+                    <Clock3
+                      size={20}
+                      className="text-indigo-600 dark:text-indigo-400"
+                    />
+                    <p className="mt-3 text-xs text-slate-400">Time Limit</p>
+                    <p className="mt-1 font-bold text-slate-900 dark:text-white">
+                      25 min
+                    </p>
+                  </div>
+
+                  <div className="col-span-2 rounded-2xl bg-slate-50 p-4 sm:col-span-1 dark:bg-slate-800/60">
+                    <Trophy
+                      size={20}
+                      className="text-indigo-600 dark:text-indigo-400"
+                    />
+                    <p className="mt-3 text-xs text-slate-400">Quiz Type</p>
+                    <p className="mt-1 font-bold text-slate-900 dark:text-white">
+                      Multiple Choice
+                    </p>
+                  </div>
+                </div>
               </div>
+              {/* Icon */}
+              <div className="hidden h-24 w-24 shrink-0 items-center justify-center rounded-3xl bg-indigo-50 text-indigo-600 md:flex dark:bg-indigo-950/40 dark:text-indigo-400">
+                <BookOpen size={40} />
+              </div>
+            </div>
 
-              {/* Start */}
-              <div className="shrink-0">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/quiz/${exam.slug}`)}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-7 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 sm:w-auto"
-                >
-                  Start Quiz
-                  <ArrowRight size={18} />
-                </button>
+            {/* Divider */}
+            <div className="my-8 h-px bg-slate-100 dark:bg-slate-800" />
 
-                <p className="mt-3 text-center text-xs text-slate-400">
-                  You need to be logged in to start
+            {/* Start section */}
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-semibold text-slate-900 dark:text-white">
+                  Ready to test yourself?
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Start the quiz and see how well you perform.
                 </p>
               </div>
+
+              <Link
+                to={`/quiz/${exam.slug}`}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700"
+              >
+                Start Quiz
+                <ArrowRight size={17} />
+              </Link>
             </div>
           </div>
-
-          {/* Quiz information */}
-          <div className="grid border-t border-slate-200 sm:grid-cols-3 dark:border-slate-800">
-            <div className="flex items-center gap-4 p-5 sm:p-6">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
-                <FileQuestion size={20} />
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">Questions</p>
-                <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">
-                  25 Questions
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 border-t border-slate-200 p-5 sm:border-l sm:border-t-0 sm:p-6 dark:border-slate-800">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
-                <Clock3 size={20} />
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">Time Limit</p>
-                <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">
-                  25 Minutes
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 border-t border-slate-200 p-5 sm:border-l sm:border-t-0 sm:p-6 dark:border-slate-800">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
-                <Users size={20} />
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400">Quiz Type</p>
-                <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">
-                  Multiple Choice
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        </section>
 
         {/* Instructions */}
         <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900">
