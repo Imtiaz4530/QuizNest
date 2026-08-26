@@ -77,15 +77,69 @@ const createExam = async (req, res) => {
 
 const getExams = async (req, res) => {
   try {
-    const exams = await Exam.find().populate("categoryId", "name slug").sort({
-      order: 1,
-      createdAt: -1,
-    });
+    const { page = 1, limit = 12, category, categoryId } = req.query;
+
+    // Convert pagination values to numbers
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const perPage = Math.max(Number(limit) || 12, 1);
+
+    const skip = (currentPage - 1) * perPage;
+
+    // Build filter
+    const filter = {};
+
+    // Filter by categoryId
+    if (categoryId) {
+      filter.categoryId = categoryId;
+    }
+
+    // Filter by category slug
+    if (category) {
+      const categoryDoc = await Category.findOne({
+        slug: category.toLowerCase().trim(),
+      });
+
+      // If category slug doesn't exist, return empty result
+      if (!categoryDoc) {
+        return res.status(200).json({
+          success: true,
+          exams: [],
+          pagination: {
+            page: currentPage,
+            limit: perPage,
+            total: 0,
+            totalPages: 0,
+          },
+        });
+      }
+
+      filter.categoryId = categoryDoc._id;
+    }
+
+    // Get total number of matching exams
+    const total = await Exam.countDocuments(filter);
+
+    // Get paginated exams
+    const exams = await Exam.find(filter)
+      .populate("categoryId", "name slug")
+      .sort({
+        order: 1,
+        createdAt: -1,
+      })
+      .skip(skip)
+      .limit(perPage);
+
+    const totalPages = Math.ceil(total / perPage);
 
     return res.status(200).json({
       success: true,
-      count: exams.length,
       exams,
+      pagination: {
+        page: currentPage,
+        limit: perPage,
+        total,
+        totalPages,
+      },
     });
   } catch (error) {
     console.error("Get exams error:", error);

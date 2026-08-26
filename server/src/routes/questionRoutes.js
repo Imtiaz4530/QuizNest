@@ -12,10 +12,12 @@ const { adminOnly, protect } = require("../middlewares/authMiddleware.js");
 
 const router = express.Router();
 
-router.post("/", protect, adminOnly, createQuestion);
-router.get("/", protect, getQuestions);
-router.get("/:id", protect, getQuestionById);
-router.patch("/:id", protect, adminOnly, updateQuestion);
-router.delete("/:id", protect, adminOnly, deleteQuestion);
+router.use(protect, adminOnly);
+
+router.post("/", createQuestion);
+router.get("/", getQuestions);
+router.get("/:id", getQuestionById);
+router.patch("/:id", updateQuestion);
+router.delete("/:id", deleteQuestion);
 
 module.exports = router;

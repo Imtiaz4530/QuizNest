@@ -1,12 +1,19 @@
 export interface Exam {
-  id: number;
+  _id: string;
   title: string;
+  slug: string;
   description: string;
-  category: string;
-  questions: number;
-  participants: string;
-  icon: React.ReactNode;
-  popular?: boolean;
+  categoryId: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+  icon: string;
+  isActive: boolean;
+  isPopular: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ExamCardProps {
