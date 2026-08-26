@@ -3,7 +3,6 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  Loader2,
   Search,
   Users,
 } from "lucide-react";

@@ -6,6 +6,7 @@ import Register from "../pages/Register";
 import Login from "../pages/Login";
 import Profile from "../pages/Profile";
 import Categories from "../pages/Categories";
+import ExamDetails from "../pages/ExamDetails";
 
 import NotFound from "../pages/NotFount";
 
@@ -25,14 +26,11 @@ export const router = createBrowserRouter([
         path: "categories",
         element: <Categories />,
       },
-      //   {
-      //     path: "leaderboard",
-      //     element: <Leaderboard />,
-      //   },
-      //   {
-      //     path: "about",
-      //     element: <About />,
-      //   },
+      {
+        path: "categories/:slug",
+        element: <ExamDetails />,
+      },
+
       // Guest-only routes
       {
         element: <GuestRoute />,
