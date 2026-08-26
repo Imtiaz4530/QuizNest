@@ -6,7 +6,7 @@ import type { ExamCardProps } from "../types/categories";
 const ExamCard = ({ exam }: ExamCardProps) => {
   return (
     <Link
-      to={`/categories/${exam.slug}`}
+      to={`/categories/${exam.slug}/${exam._id}`}
       className="group relative flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-lg hover:shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-900 dark:hover:shadow-none"
     >
       {exam.isPopular && (

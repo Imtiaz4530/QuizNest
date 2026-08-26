@@ -12,6 +12,7 @@ import NotFound from "../pages/NotFount";
 
 import ProtectedRoute from "../components/ProtectedRoute";
 import GuestRoute from "../components/GuestRoute";
+import Quiz from "../pages/Quiz";
 
 export const router = createBrowserRouter([
   {
@@ -27,7 +28,7 @@ export const router = createBrowserRouter([
         element: <Categories />,
       },
       {
-        path: "categories/:slug",
+        path: "categories/:slug/:examId",
         element: <ExamDetails />,
       },
 
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
           {
             path: "/profile",
             element: <Profile />,
+          },
+          {
+            path: "/quiz/:slug",
+            element: <Quiz />,
           },
         ],
       },
