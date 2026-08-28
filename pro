@@ -1,7 +1,6 @@
-import { BarChart3, Loader2, Pencil, Trophy } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
 
 import api from "../lib/axios";
 import ProfileForm from "../components/ProfileForm";
@@ -21,13 +20,6 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [quizStats, setQuizStats] = useState({
-    quizzesCompleted: 0,
-    questionsAnswered: 0,
-    averageScore: 0,
-  });
-
-  const [statsLoading, setStatsLoading] = useState(true);
 
   const [formData, setFormData] = useState<ProfileFormData | null>(null);
 
@@ -52,64 +44,6 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, []);
-
-  useEffect(() => {
-    const fetchQuizStats = async () => {
-      try {
-        setStatsLoading(true);
-
-        const response = await api.get("/quiz-attempts/my");
-
-        const attempts = response.data.attempts || [];
-
-        const quizzesCompleted = attempts.length;
-
-        const questionsAnswered = attempts.reduce(
-          (total: number, attempt: any) => {
-            return total + (attempt.answers?.length || 0);
-          },
-          0,
-        );
-
-        const totalQuestions = attempts.reduce(
-          (total: number, attempt: any) => {
-            return total + (attempt.answers?.length || 0);
-          },
-          0,
-        );
-
-        const totalCorrect = attempts.reduce((total: number, attempt: any) => {
-          return (
-            total +
-            (attempt.answers?.filter((answer: any) => answer.isCorrect)
-              .length || 0)
-          );
-        }, 0);
-
-        const totalScore = attempts.reduce(
-          (total: number, attempt: any) => total + attempt.score,
-          0,
-        );
-
-        const averageScore =
-          totalQuestions > 0
-            ? Math.round((totalScore / totalQuestions) * 100)
-            : 0;
-
-        setQuizStats({
-          quizzesCompleted,
-          questionsAnswered,
-          averageScore,
-        });
-      } catch (error) {
-        console.error("Failed to fetch quiz statistics:", error);
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-
-    fetchQuizStats();
   }, []);
 
   const startEditing = () => {
@@ -267,8 +201,6 @@ const Profile = () => {
             profile={profile}
             initials={initials}
             memberSince={memberSince}
-            statsLoading={statsLoading}
-            quizStats={quizStats}
           />
         ) : (
           <ProfileForm

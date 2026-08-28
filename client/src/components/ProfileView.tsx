@@ -1,14 +1,15 @@
 import { CalendarDays, UserRound } from "lucide-react";
 import type { ProfileViewProps } from "../types/profile";
-import {
-  capitalize,
-  formatBDPhone,
-  InfoItem,
-  SocialLink,
-  StatCard,
-} from "./Form";
+import { capitalize, formatBDPhone, InfoItem, SocialLink } from "./Form";
+import ProfileStats from "./ProfileStats";
 
-const ProfileView = ({ profile, initials, memberSince }: ProfileViewProps) => {
+const ProfileView = ({
+  profile,
+  initials,
+  memberSince,
+  statsLoading,
+  quizStats,
+}: ProfileViewProps) => {
   return (
     <>
       <div className="mt-8 grid gap-6 lg:grid-cols-[320px_1fr]">
@@ -129,13 +130,14 @@ const ProfileView = ({ profile, initials, memberSince }: ProfileViewProps) => {
       </div>
 
       {/* Statistics placeholder */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      {/* <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <StatCard label="Quizzes Completed" value="0" />
 
         <StatCard label="Questions Answered" value="0" />
 
         <StatCard label="Average Score" value="0%" />
-      </div>
+      </div> */}
+      <ProfileStats statsLoading={statsLoading} quizStats={quizStats} />
     </>
   );
 };
