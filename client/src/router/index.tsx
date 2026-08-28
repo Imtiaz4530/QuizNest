@@ -17,6 +17,7 @@ import NotFound from "../pages/NotFount";
 import ProtectedRoute from "../components/ProtectedRoute";
 import GuestRoute from "../components/GuestRoute";
 import About from "../pages/About";
+import Terms from "../pages/Terms";
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
       {
         path: "about",
         element: <About />,
+      },
+      {
+        path: "terms",
+        element: <Terms />,
       },
 
       // Guest-only routes
