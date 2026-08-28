@@ -8,34 +8,14 @@ import {
   FileQuestion,
   Loader2,
   Trophy,
-  Users,
 } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+
 import axios from "../lib/axios";
-
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-}
-
-interface Exam {
-  _id: string;
-  title: string;
-  slug: string;
-  description: string;
-  categoryId: Category;
-  icon: string;
-  isActive: boolean;
-  isPopular: boolean;
-  order: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Exam } from "../types/exam";
 
 const ExamDetails = () => {
   const { slug, examId } = useParams();
-  const navigate = useNavigate();
 
   const [exam, setExam] = useState<Exam | null>(null);
   const [loading, setLoading] = useState(true);
@@ -202,7 +182,7 @@ const ExamDetails = () => {
               </div>
 
               <Link
-                to={`/quiz/${exam.slug}`}
+                to={`/quiz/${exam.slug}/${exam._id}`}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700"
               >
                 Start Quiz
@@ -217,28 +197,45 @@ const ExamDetails = () => {
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">
             Before you start
           </h2>
+          <div className="flex gap-8">
+            <div className="flex-1 mt-5 grid gap-4 sm:grid-cols-1">
+              {[
+                "The quiz contains 25 multiple-choice questions.",
+                "You will have 25 minutes to complete the quiz.",
+                "Each question has four options.",
+                "Your result will be calculated after submission.",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/60"
+                >
+                  <CheckCircle2
+                    size={19}
+                    className="mt-0.5 shrink-0 text-indigo-600 dark:text-indigo-400"
+                  />
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {[
-              "The quiz contains 25 multiple-choice questions.",
-              "You will have 25 minutes to complete the quiz.",
-              "Each question has four options.",
-              "Your result will be calculated after submission.",
-            ].map((item) => (
-              <div
-                key={item}
-                className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/60"
-              >
-                <CheckCircle2
-                  size={19}
-                  className="mt-0.5 shrink-0 text-indigo-600 dark:text-indigo-400"
-                />
+                  <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    {item}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="flex-1 rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400">
+                  <Trophy size={20} />
+                </div>
 
-                <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                  {item}
-                </p>
+                <h3 className="font-semibold text-slate-900 dark:text-white">
+                  Track your progress
+                </h3>
               </div>
-            ))}
+
+              <p className="mt-5 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                Your quiz attempts will be saved so you can review your
+                performance and track your progress over time.
+              </p>
+            </div>
           </div>
         </div>
       </div>

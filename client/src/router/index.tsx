@@ -56,7 +56,7 @@ export const router = createBrowserRouter([
             element: <Profile />,
           },
           {
-            path: "/quiz/:slug",
+            path: "/quiz/:slug/:examId",
             element: <Quiz />,
           },
         ],

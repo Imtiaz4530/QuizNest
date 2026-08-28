@@ -1,11 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Clock3, Flag, Send } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Clock3,
+  Flag,
+  Loader2,
+  Send,
+} from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import api from "../lib/axios";
 
 type OptionKey = "A" | "B" | "C" | "D";
 
-interface Question {
-  id: number;
+interface QuizQuestion {
+  _id: string;
   question: string;
   options: {
     A: string;
@@ -15,69 +23,258 @@ interface Question {
   };
 }
 
-const questions: Question[] = [
-  {
-    id: 1,
-    question: "Which is the national flower of Bangladesh?",
-    options: {
-      A: "Rose",
-      B: "Water Lily",
-      C: "Sunflower",
-      D: "Marigold",
-    },
-  },
-  {
-    id: 2,
-    question: "What is the capital city of Bangladesh?",
-    options: {
-      A: "Chittagong",
-      B: "Rajshahi",
-      C: "Dhaka",
-      D: "Sylhet",
-    },
-  },
-  {
-    id: 3,
-    question: "In which year did Bangladesh gain independence?",
-    options: {
-      A: "1947",
-      B: "1952",
-      C: "1971",
-      D: "1975",
-    },
-  },
-];
+interface QuizExam {
+  _id: string;
+  title: string;
+  slug: string;
+  description: string;
+  icon: string;
+  categoryId: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+}
 
-const TOTAL_QUESTIONS = 25;
-const QUIZ_DURATION = 25 * 60;
+interface StartQuizResponse {
+  success: boolean;
+  exam: QuizExam;
+  totalQuestions: number;
+  questions: QuizQuestion[];
+}
+
+interface SubmitQuizResponse {
+  success: boolean;
+  message: string;
+  result: {
+    attemptId: string;
+    examId: string;
+    score: number;
+    totalQuestions: number;
+    correctAnswers: number;
+    wrongAnswers: number;
+    unanswered: number;
+  };
+}
+
+const QUIZ_DURATION = 2 * 60;
 
 const Quiz = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
 
+  const [exam, setExam] = useState<QuizExam | null>(null);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, OptionKey | undefined>>(
+
+  const [answers, setAnswers] = useState<Record<string, OptionKey | undefined>>(
     {},
   );
+
   const [timeLeft, setTimeLeft] = useState(QUIZ_DURATION);
+
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  // Prevent submitQuiz from being called more than once.
+  const hasSubmitted = useRef(false);
+
+  /*
+   * Load quiz questions from backend.
+   *
+   * Your route:
+   * GET /api/quizzes/:examId/start
+   *
+   * IMPORTANT:
+   * This route currently requires examId, while this page receives
+   * the exam slug from /categories/:slug.
+   *
+   * Therefore, this assumes your categories/exam details page
+   * navigates to Quiz with the actual exam ID available.
+   *
+   * If your current route only contains the slug, see the note
+   * below the code.
+   */
+  useEffect(() => {
+    const loadQuiz = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        /*
+         * If your URL is /quiz/bcs and "bcs" is the slug,
+         * you cannot send "bcs" to /start because your backend
+         * expects examId.
+         *
+         * This first gets the exam using the slug:
+         *
+         * GET /api/exams?slug=bcs
+         *
+         * If your exam API doesn't support slug filtering yet,
+         * I explain the small backend change below.
+         */
+
+        const examResponse = await api.get("/exams", {
+          params: {
+            slug,
+          },
+        });
+
+        const exams = examResponse.data?.exams || [];
+
+        const matchedExam = exams.find((item: QuizExam) => item.slug === slug);
+
+        if (!matchedExam) {
+          throw new Error("Exam not found");
+        }
+
+        setExam(matchedExam);
+
+        const quizResponse = await api.get<StartQuizResponse>(
+          `/quizzes/${matchedExam._id}/start`,
+        );
+
+        if (!quizResponse.data.success) {
+          throw new Error("Unable to start quiz");
+        }
+
+        setQuestions(quizResponse.data.questions);
+      } catch (err: any) {
+        console.error("Load quiz error:", err);
+
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Something went wrong while starting the quiz.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (slug) {
+      loadQuiz();
+    }
+  }, [slug]);
 
   const question = questions[currentQuestion];
 
-  const progress = useMemo(() => {
-    return ((currentQuestion + 1) / TOTAL_QUESTIONS) * 100;
-  }, [currentQuestion]);
+  const totalQuestions = questions.length;
 
+  const progress = useMemo(() => {
+    if (!totalQuestions) return 0;
+
+    return ((currentQuestion + 1) / totalQuestions) * 100;
+  }, [currentQuestion, totalQuestions]);
+
+  /*
+   * Submit quiz
+   *
+   * This function is used by BOTH:
+   *
+   * 1. Manual submit
+   * 2. Automatic submit when timer reaches 0
+   */
+  const handleSubmit = useCallback(async () => {
+    if (!exam || !questions.length) return;
+
+    // Prevent duplicate requests.
+    if (hasSubmitted.current || submitting) return;
+
+    hasSubmitted.current = true;
+    setSubmitting(true);
+
+    try {
+      /*
+       * Backend expects:
+       *
+       * {
+       *   examId,
+       *   answers: [
+       *     {
+       *       questionId,
+       *       selectedAnswer
+       *     }
+       *   ]
+       * }
+       */
+
+      const formattedAnswers = questions.map((question) => ({
+        questionId: question._id,
+        selectedAnswer: answers[question._id] || null,
+      }));
+
+      const response = await api.post<SubmitQuizResponse>(
+        `/quizzes/${exam._id}/submit`,
+        {
+          answers: formattedAnswers,
+        },
+      );
+
+      if (!response.data.success) {
+        throw new Error("Quiz submission failed");
+      }
+
+      /*
+       * Navigate to result page.
+       *
+       * Example:
+       * /quiz-result/665abc123
+       */
+      navigate(`/quiz-result/${response.data.result.attemptId}`, {
+        replace: true,
+        state: {
+          result: response.data.result,
+          exam,
+        },
+      });
+    } catch (err: any) {
+      console.error("Submit quiz error:", err);
+
+      /*
+       * Submission failed, so allow the user to try again.
+       */
+      hasSubmitted.current = false;
+      setSubmitting(false);
+
+      setError(
+        err?.response?.data?.message ||
+          "Something went wrong while submitting the quiz.",
+      );
+    }
+  }, [exam, questions, answers, navigate, submitting]);
+
+  /*
+   * Timer
+   *
+   * When it reaches 0:
+   * -> automatically submit
+   * -> no more answers
+   * -> no more navigation
+   * -> redirect after successful submission
+   */
   useEffect(() => {
+    if (loading || submitting || hasSubmitted.current) return;
+
     if (timeLeft <= 0) {
       handleSubmit();
       return;
     }
 
     const timer = window.setInterval(() => {
-      setTimeLeft((previous) => previous - 1);
+      setTimeLeft((previous) => {
+        if (previous <= 1) {
+          window.clearInterval(timer);
+          return 0;
+        }
+
+        return previous - 1;
+      });
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, loading, submitting, handleSubmit]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -89,35 +286,86 @@ const Quiz = () => {
   };
 
   const selectAnswer = (option: OptionKey) => {
+    if (submitting || hasSubmitted.current || !question) return;
+
     setAnswers((previous) => ({
       ...previous,
-      [question.id]: option,
+      [question._id]: option,
     }));
   };
 
   const handlePrevious = () => {
+    if (submitting || hasSubmitted.current) return;
+
     if (currentQuestion > 0) {
       setCurrentQuestion((previous) => previous - 1);
     }
   };
 
   const handleNext = () => {
-    if (currentQuestion < TOTAL_QUESTIONS - 1) {
+    if (submitting || hasSubmitted.current) return;
+
+    if (currentQuestion < totalQuestions - 1) {
       setCurrentQuestion((previous) => previous + 1);
     }
   };
 
-  const handleSubmit = () => {
-    console.log("Submit quiz", {
-      slug,
-      answers,
-    });
+  /*
+   * Loading state
+   */
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-72px)] bg-slate-50 dark:bg-slate-950">
+        <div className="mx-auto flex min-h-[calc(100vh-72px)] max-w-5xl items-center justify-center px-5 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center">
+            <Loader2
+              size={32}
+              className="animate-spin text-indigo-600 dark:text-indigo-400"
+            />
 
-    // Later:
-    // POST /api/quiz/:examId/submit
-  };
+            <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-300">
+              Preparing your quiz...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const selectedAnswer = answers[question.id];
+  /*
+   * Error state
+   */
+  if (error || !exam || !question) {
+    return (
+      <div className="min-h-[calc(100vh-72px)] bg-slate-50 dark:bg-slate-950">
+        <div className="mx-auto flex min-h-[calc(100vh-72px)] max-w-5xl items-center justify-center px-5 sm:px-6 lg:px-8">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400">
+              !
+            </div>
+
+            <h2 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">
+              Unable to start quiz
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+              {error || "Quiz data could not be loaded."}
+            </p>
+
+            <Link
+              to="/categories"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+            >
+              <ArrowLeft size={17} />
+              Back to exams
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const selectedAnswer = answers[question._id];
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-slate-50 dark:bg-slate-950">
@@ -134,11 +382,11 @@ const Quiz = () => {
             </Link>
 
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Bangladesh General Knowledge
+              {exam.title}
             </h1>
 
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              25 Questions · 25 Minutes
+              {totalQuestions} Questions · 25 Minutes
             </p>
           </div>
 
@@ -168,7 +416,7 @@ const Quiz = () => {
         <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
           <div className="mb-3 flex items-center justify-between text-sm">
             <span className="font-semibold text-slate-700 dark:text-slate-200">
-              Question {currentQuestion + 1} of {TOTAL_QUESTIONS}
+              Question {currentQuestion + 1} of {totalQuestions}
             </span>
 
             <span className="font-medium text-indigo-600 dark:text-indigo-400">
@@ -199,7 +447,8 @@ const Quiz = () => {
 
             <button
               type="button"
-              className="hidden shrink-0 rounded-xl p-2.5 text-slate-400 transition hover:bg-slate-100 hover:text-indigo-600 sm:block dark:hover:bg-slate-800"
+              disabled={submitting}
+              className="hidden shrink-0 rounded-xl p-2.5 text-slate-400 transition hover:bg-slate-100 hover:text-indigo-600 disabled:cursor-not-allowed sm:block dark:hover:bg-slate-800"
               title="Flag question"
             >
               <Flag size={19} />
@@ -216,8 +465,9 @@ const Quiz = () => {
                   <button
                     key={key}
                     type="button"
+                    disabled={submitting}
                     onClick={() => selectAnswer(key)}
-                    className={`group flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition ${
+                    className={`group flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition disabled:cursor-not-allowed ${
                       isSelected
                         ? "border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600 dark:border-indigo-500 dark:bg-indigo-950/30"
                         : "border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-800 dark:hover:bg-slate-800/70"
@@ -253,27 +503,38 @@ const Quiz = () => {
             <button
               type="button"
               onClick={handlePrevious}
-              disabled={currentQuestion === 0}
+              disabled={currentQuestion === 0 || submitting}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               <ArrowLeft size={17} />
               Previous
             </button>
 
-            {currentQuestion === TOTAL_QUESTIONS - 1 ? (
+            {currentQuestion === totalQuestions - 1 ? (
               <button
                 type="button"
-                onClick={handleSubmit}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                onClick={() => handleSubmit()}
+                disabled={submitting}
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                Submit Quiz
-                <Send size={16} />
+                {submitting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    Submit Quiz
+                    <Send size={16} />
+                  </>
+                )}
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleNext}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                disabled={submitting}
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 Next
                 <ArrowRight size={17} />

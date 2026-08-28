@@ -2,6 +2,61 @@ const Exam = require("../models/Exam.js");
 const Question = require("../models/Question.js");
 const QuizAttempt = require("../models/QuizAttempt.js");
 
+// const startQuiz = async (req, res) => {
+//   try {
+//     const { examId } = req.params;
+
+//     // Check if exam exists and is active
+//     const exam = await Exam.findOne({
+//       _id: examId,
+//       isActive: true,
+//     }).populate("categoryId", "name slug");
+
+//     if (!exam) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Exam not found or inactive",
+//       });
+//     }
+
+//     // Get all questions for this exam
+//     const questions = await Question.find({
+//       examId: exam._id,
+//     }).select("_id question options");
+
+//     if (questions.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "No questions available for this exam",
+//       });
+//     }
+
+//     // Shuffle questions
+//     const shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+
+//     return res.status(200).json({
+//       success: true,
+//       exam: {
+//         _id: exam._id,
+//         title: exam.title,
+//         slug: exam.slug,
+//         description: exam.description,
+//         icon: exam.icon,
+//         categoryId: exam.categoryId,
+//       },
+//       totalQuestions: shuffledQuestions.length,
+//       questions: shuffledQuestions,
+//     });
+//   } catch (error) {
+//     console.error("Start quiz error:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Something went wrong while starting quiz",
+//     });
+//   }
+// };
+
 const startQuiz = async (req, res) => {
   try {
     const { examId } = req.params;
@@ -19,10 +74,26 @@ const startQuiz = async (req, res) => {
       });
     }
 
-    // Get all questions for this exam
-    const questions = await Question.find({
-      examId: exam._id,
-    }).select("_id question options");
+    // Randomly select 25 questions directly from MongoDB
+    const questions = await Question.aggregate([
+      {
+        $match: {
+          examId: exam._id,
+        },
+      },
+      {
+        $sample: {
+          size: 25,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          question: 1,
+          options: 1,
+        },
+      },
+    ]);
 
     if (questions.length === 0) {
       return res.status(404).json({
@@ -30,9 +101,6 @@ const startQuiz = async (req, res) => {
         message: "No questions available for this exam",
       });
     }
-
-    // Shuffle questions
-    const shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
 
     return res.status(200).json({
       success: true,
@@ -44,8 +112,8 @@ const startQuiz = async (req, res) => {
         icon: exam.icon,
         categoryId: exam.categoryId,
       },
-      totalQuestions: shuffledQuestions.length,
-      questions: shuffledQuestions,
+      totalQuestions: questions.length,
+      questions,
     });
   } catch (error) {
     console.error("Start quiz error:", error);
@@ -56,7 +124,6 @@ const startQuiz = async (req, res) => {
     });
   }
 };
-
 const submitQuiz = async (req, res) => {
   try {
     const { examId } = req.params;
