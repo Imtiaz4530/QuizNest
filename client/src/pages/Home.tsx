@@ -4,60 +4,6 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Home = () => {
-  const categories = [
-    {
-      title: "BCS Preparation",
-      description:
-        "Practice questions designed for Bangladesh Civil Service preparation.",
-      icon: "🏛️",
-      quizzes: 250,
-    },
-    {
-      title: "University Admission",
-      description:
-        "Prepare for university admission tests with focused MCQ practice.",
-      icon: "🎓",
-      quizzes: 180,
-    },
-    {
-      title: "Bank Jobs",
-      description: "Sharpen your skills for banking recruitment examinations.",
-      icon: "🏦",
-      quizzes: 120,
-    },
-    {
-      title: "General Knowledge",
-      description:
-        "Test yourself on Bangladesh and international general knowledge.",
-      icon: "🌎",
-      quizzes: 300,
-    },
-  ];
-
-  const quizzes = [
-    {
-      title: "Bangladesh Affairs — Quick Test",
-      category: "General Knowledge",
-      questions: 20,
-      duration: 10,
-      attempts: "12.4K",
-    },
-    {
-      title: "BCS Preliminary — Bangladesh Affairs",
-      category: "BCS",
-      questions: 25,
-      duration: 15,
-      attempts: "9.8K",
-    },
-    {
-      title: "English Grammar Challenge",
-      category: "English",
-      questions: 20,
-      duration: 10,
-      attempts: "8.2K",
-    },
-  ];
-
   const { user, token } = useAuth();
   console.log(user, token);
 
@@ -230,13 +176,6 @@ const Home = () => {
             <ArrowRight size={16} />
           </Link>
         </div>
-
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {/* {categories.map((category) => (
-            <CategoryCard key={category.title} {...category} />
-          ))} */}
-          <h1>CategoryCard CategoryCard CategoryCard</h1>
-        </div>
       </section>
 
       {/* Popular quizzes */}
@@ -254,13 +193,6 @@ const Home = () => {
             <p className="mt-3 text-slate-500 dark:text-slate-400">
               See what other learners are practicing right now.
             </p>
-          </div>
-
-          <div className="grid gap-5 lg:grid-cols-3">
-            {/* {quizzes.map((quiz) => (
-              <QuizCard key={quiz.title} {...quiz} />
-            ))} */}
-            <h1>QuizCard QuizCard QuizCard</h1>
           </div>
         </div>
       </section>
