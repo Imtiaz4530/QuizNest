@@ -14,6 +14,7 @@ const examRoutes = require("./routes/examRoutes.js");
 const questionRoutes = require("./routes/questionRoutes.js");
 const quizAttemptRoutes = require("./routes/quizAttemptRoutes.js");
 const quizRoutes = require("./routes/quizRoutes.js");
+const leaderboardRoutes = require("./routes/leaderboardRoutes.js");
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/profiles", profileRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/quiz-attempts", quizAttemptRoutes);
 app.use("/api/quizzes", quizRoutes);
 
