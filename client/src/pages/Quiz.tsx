@@ -222,7 +222,7 @@ const Quiz = () => {
        * Example:
        * /quiz-result/665abc123
        */
-      navigate(`/quiz-result/${response.data.result.attemptId}`, {
+      navigate(`/results/${response.data.result.attemptId}`, {
         replace: true,
         state: {
           result: response.data.result,

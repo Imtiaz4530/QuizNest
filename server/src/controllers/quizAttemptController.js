@@ -1,6 +1,4 @@
 const QuizAttempt = require("../models/QuizAttempt.js");
-const Exam = require("../models/Exam.js");
-const Question = require("../models/Question.js");
 
 const getMyQuizAttempts = async (req, res) => {
   try {

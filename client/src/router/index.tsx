@@ -13,6 +13,8 @@ import NotFound from "../pages/NotFount";
 import ProtectedRoute from "../components/ProtectedRoute";
 import GuestRoute from "../components/GuestRoute";
 import Quiz from "../pages/Quiz";
+import Results from "../pages/Results";
+import ResultDetails from "../pages/ResultDetails";
 
 export const router = createBrowserRouter([
   {
@@ -59,6 +61,8 @@ export const router = createBrowserRouter([
             path: "/quiz/:slug/:examId",
             element: <Quiz />,
           },
+          { path: "/results", element: <Results /> },
+          { path: "/results/:id", element: <ResultDetails /> },
         ],
       },
     ],
