@@ -220,6 +220,7 @@ const submitQuiz = async (req, res) => {
       examId: exam._id,
       score,
       answers: processedAnswers,
+      totalQuestions: questions.length,
     });
 
     return res.status(201).json({

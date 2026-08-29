@@ -20,6 +20,12 @@ const quizAttemptSchema = new mongoose.Schema(
       min: [0, "Score cannot be negative"],
     },
 
+    totalQuestions: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
     answers: [
       {
         questionId: {
