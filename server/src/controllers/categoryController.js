@@ -46,17 +46,60 @@ const createCategory = async (req, res) => {
   }
 };
 
+// const getCategories = async (req, res) => {
+//   try {
+//     const categories = await Category.find().sort({
+//       order: 1,
+//       createdAt: -1,
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       count: categories.length,
+//       categories,
+//     });
+//   } catch (error) {
+//     console.error("Get categories error:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Something went wrong while fetching categories",
+//     });
+//   }
+// };
+
 const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find().sort({
-      order: 1,
-      createdAt: -1,
-    });
+    const { page = 1, limit = 10 } = req.query;
+
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const perPage = Math.min(Math.max(Number(limit) || 10, 1), 100);
+
+    const skip = (currentPage - 1) * perPage;
+
+    // Get total categories
+    const total = await Category.countDocuments();
+
+    // Get paginated categories
+    const categories = await Category.find()
+      .sort({
+        order: 1,
+        createdAt: -1,
+      })
+      .skip(skip)
+      .limit(perPage);
+
+    const totalPages = Math.ceil(total / perPage);
 
     return res.status(200).json({
       success: true,
-      count: categories.length,
       categories,
+      pagination: {
+        page: currentPage,
+        limit: perPage,
+        total,
+        totalPages,
+      },
     });
   } catch (error) {
     console.error("Get categories error:", error);
