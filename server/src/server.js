@@ -15,6 +15,7 @@ const questionRoutes = require("./routes/questionRoutes.js");
 const quizAttemptRoutes = require("./routes/quizAttemptRoutes.js");
 const quizRoutes = require("./routes/quizRoutes.js");
 const leaderboardRoutes = require("./routes/leaderboardRoutes.js");
+const dashboardRoutes = require("./routes/dashboardRoutes.js");
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use("/api/quizzes", quizRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/exams", examRoutes);
 app.use("/api/questions", questionRoutes);
+app.use("/api/admin/dashboard", dashboardRoutes);
 
 const PORT = process.env.PORT || 5000;
 
