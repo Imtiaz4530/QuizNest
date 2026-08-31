@@ -1,22 +1,26 @@
 import {
+  AlertTriangle,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Search,
-  ShieldCheck,
-  User,
+  Shield,
+  ShieldAlert,
+  UserCheck,
+  UserCog,
   Users as UsersIcon,
+  X,
 } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 import api from "../lib/axios";
 
-interface UserData {
+interface User {
   _id: string;
   name: string;
   email: string;
   role: "user" | "admin";
-  isActive: boolean;
+  status: "active" | "restricted" | "blocked";
   avatar: string;
   createdAt: string;
   updatedAt: string;
@@ -24,7 +28,7 @@ interface UserData {
 
 interface UsersResponse {
   success: boolean;
-  users: UserData[];
+  users: User[];
   pagination: {
     page: number;
     limit: number;
@@ -34,13 +38,12 @@ interface UsersResponse {
 }
 
 const Users = () => {
-  const [users, setUsers] = useState<UserData[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
-
   const [page, setPage] = useState(1);
+  const [roleFilter, setRoleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -49,6 +52,12 @@ const Users = () => {
     totalPages: 1,
   });
 
+  // Action modal
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [actionType, setActionType] = useState<"role" | "status" | null>(null);
+  const [actionValue, setActionValue] = useState("");
+  const [updating, setUpdating] = useState(false);
+
   /*
    * Fetch users
    */
@@ -56,10 +65,12 @@ const Users = () => {
     try {
       setLoading(true);
 
-      const response = await api.get<UsersResponse>("/users/", {
+      const response = await api.get<UsersResponse>("/users", {
         params: {
           page,
           limit: 10,
+          role: roleFilter,
+          status: statusFilter,
         },
       });
 
@@ -76,51 +87,7 @@ const Users = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [page]);
-
-  /*
-   * Search
-   *
-   * Current users API does not expose a search parameter,
-   * so search is performed on the currently loaded page.
-   */
-  const filteredUsers = users.filter((user) => {
-    const value = search.trim().toLowerCase();
-
-    if (!value) return true;
-
-    return (
-      user.name.toLowerCase().includes(value) ||
-      user.email.toLowerCase().includes(value)
-    );
-  });
-
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    setSearch(searchInput);
-    setPage(1);
-  };
-
-  /*
-   * Page change
-   */
-  const handlePageChange = (nextPage: number) => {
-    if (
-      nextPage < 1 ||
-      nextPage > pagination.totalPages ||
-      nextPage === pagination.page
-    ) {
-      return;
-    }
-
-    setPage(nextPage);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+  }, [page, roleFilter, statusFilter]);
 
   /*
    * Format date
@@ -134,18 +101,125 @@ const Users = () => {
   };
 
   /*
-   * Get initials
+   * Open role change modal
    */
-  const getInitials = (name: string) => {
-    return (
-      name
-        .trim()
-        .split(" ")
-        .map((word) => word.charAt(0))
-        .slice(0, 2)
-        .join("")
-        .toUpperCase() || "U"
-    );
+  const openRoleModal = (user: User) => {
+    // Admins cannot be changed back to user.
+    if (user.role === "admin") {
+      toast.info("Admin accounts cannot be changed to user.");
+      return;
+    }
+
+    setSelectedUser(user);
+    setActionType("role");
+    setActionValue("admin");
+  };
+
+  /*
+   * Open status change modal
+   */
+  const openStatusModal = (user: User) => {
+    // Admin accounts cannot be restricted or blocked.
+    if (user.role === "admin") {
+      toast.info("Admin status cannot be changed.");
+      return;
+    }
+
+    setSelectedUser(user);
+    setActionType("status");
+    setActionValue(user.status);
+  };
+
+  /*
+   * Close modal
+   */
+  const closeModal = () => {
+    if (updating) return;
+
+    setSelectedUser(null);
+    setActionType(null);
+    setActionValue("");
+  };
+
+  /*
+   * Update role/status
+   */
+  const handleUpdate = async () => {
+    if (!selectedUser || !actionType || !actionValue) return;
+
+    try {
+      setUpdating(true);
+
+      const payload =
+        actionType === "role" ? { role: actionValue } : { status: actionValue };
+
+      const response = await api.patch(`/users/${selectedUser._id}`, payload);
+
+      toast.success(
+        response.data.message ||
+          `${actionType === "role" ? "Role" : "Status"} updated successfully.`,
+      );
+
+      closeModal();
+      await fetchUsers();
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          `Unable to update ${actionType === "role" ? "role" : "status"}.`,
+      );
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  /*
+   * Status styles
+   */
+  const getStatusStyle = (status: User["status"]) => {
+    switch (status) {
+      case "active":
+        return "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400";
+
+      case "restricted":
+        return "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400";
+
+      case "blocked":
+        return "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400";
+
+      default:
+        return "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400";
+    }
+  };
+
+  /*
+   * Status icon
+   */
+  const getStatusIcon = (status: User["status"]) => {
+    switch (status) {
+      case "active":
+        return <CheckCircle2 size={14} />;
+
+      case "restricted":
+        return <ShieldAlert size={14} />;
+
+      case "blocked":
+        return <AlertTriangle size={14} />;
+
+      default:
+        return null;
+    }
+  };
+
+  /*
+   * Page change
+   */
+  const handlePageChange = (nextPage: number) => {
+    setPage(nextPage);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   return (
@@ -164,41 +238,45 @@ const Users = () => {
         </h1>
 
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Manage registered users and monitor their account status.
+          Manage users, roles, and account access.
         </p>
       </div>
 
       {/* ===================================================== */}
-      {/* SEARCH */}
+      {/* FILTERS */}
       {/* ===================================================== */}
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <form
-          onSubmit={handleSearch}
-          className="flex flex-col gap-3 sm:flex-row"
-        >
-          <div className="relative flex-1">
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Search users by name or email..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="cursor-pointer rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+        <div className="flex flex-col gap-3 sm:flex-row">
+          {/* Role */}
+          <select
+            value={roleFilter}
+            onChange={(event) => {
+              setRoleFilter(event.target.value);
+              setPage(1);
+            }}
+            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           >
-            Search
-          </button>
-        </form>
+            <option value="">All Roles</option>
+            <option value="user">Users</option>
+            <option value="admin">Admins</option>
+          </select>
+
+          {/* Status */}
+          <select
+            value={statusFilter}
+            onChange={(event) => {
+              setStatusFilter(event.target.value);
+              setPage(1);
+            }}
+            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="restricted">Restricted</option>
+            <option value="blocked">Blocked</option>
+          </select>
+        </div>
       </div>
 
       {/* ===================================================== */}
@@ -206,20 +284,14 @@ const Users = () => {
       {/* ===================================================== */}
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
-            <UsersIcon size={19} />
-          </div>
+        <div>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Total users
+          </p>
 
-          <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Total users
-            </p>
-
-            <p className="mt-0.5 text-xl font-bold text-slate-900 dark:text-white">
-              {pagination.total}
-            </p>
-          </div>
+          <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
+            {pagination.total}
+          </p>
         </div>
 
         <div className="text-right text-sm text-slate-500 dark:text-slate-400">
@@ -236,10 +308,10 @@ const Users = () => {
           <div className="flex min-h-[360px] items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600 dark:border-slate-700 dark:border-t-indigo-400" />
           </div>
-        ) : filteredUsers.length === 0 ? (
+        ) : users.length === 0 ? (
           <div className="flex min-h-[360px] flex-col items-center justify-center px-6 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800">
-              <User size={25} />
+              <UsersIcon size={25} />
             </div>
 
             <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
@@ -247,7 +319,7 @@ const Users = () => {
             </h3>
 
             <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
-              Try searching with a different name or email address.
+              Try changing your role or status filter.
             </p>
           </div>
         ) : (
@@ -273,82 +345,131 @@ const Users = () => {
                     </th>
 
                     <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Created
+                      Joined
+                    </th>
+
+                    <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Actions
                     </th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredUsers.map((user) => (
-                    <tr
-                      key={user._id}
-                      className="border-b border-slate-100 transition hover:bg-slate-50/70 last:border-0 dark:border-slate-800 dark:hover:bg-slate-800/40"
-                    >
-                      {/* User */}
+                  {users.map((user) => {
+                    const initials = user.name
+                      .trim()
+                      .split(" ")
+                      .map((word) => word.charAt(0))
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase();
 
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {user.avatar ? (
-                            <img
-                              src={user.avatar}
-                              alt={user.name}
-                              className="h-10 w-10 shrink-0 rounded-xl object-cover"
-                            />
-                          ) : (
+                    return (
+                      <tr
+                        key={user._id}
+                        className="border-b border-slate-100 transition hover:bg-slate-50/70 last:border-0 dark:border-slate-800 dark:hover:bg-slate-800/40"
+                      >
+                        {/* User */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-sm font-bold text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
-                              {getInitials(user.name)}
+                              {user.avatar ? (
+                                <img
+                                  src={user.avatar}
+                                  alt={user.name}
+                                  className="h-full w-full rounded-xl object-cover"
+                                />
+                              ) : (
+                                initials
+                              )}
                             </div>
-                          )}
 
-                          <div className="min-w-0">
-                            <p className="truncate font-semibold text-slate-900 dark:text-white">
-                              {user.name}
-                            </p>
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-slate-900 dark:text-white">
+                                {user.name}
+                              </p>
 
-                            <p className="mt-0.5 truncate text-sm text-slate-500 dark:text-slate-400">
-                              {user.email}
-                            </p>
+                              <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                                {user.email}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      {/* Role */}
+                        {/* Role */}
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
+                              user.role === "admin"
+                                ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400"
+                                : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                            }`}
+                          >
+                            {user.role === "admin" ? (
+                              <Shield size={13} />
+                            ) : (
+                              <UserCheck size={13} />
+                            )}
 
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
-                            user.role === "admin"
-                              ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400"
-                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                          }`}
-                        >
-                          {user.role === "admin" && <ShieldCheck size={13} />}
+                            {user.role === "admin" ? "Admin" : "User"}
+                          </span>
+                        </td>
 
-                          {user.role === "admin" ? "Admin" : "User"}
-                        </span>
-                      </td>
+                        {/* Status */}
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold capitalize ${getStatusStyle(
+                              user.status,
+                            )}`}
+                          >
+                            {getStatusIcon(user.status)}
+                            {user.status}
+                          </span>
+                        </td>
 
-                      {/* Status */}
+                        {/* Joined */}
+                        <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                          {formatDate(user.createdAt)}
+                        </td>
 
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${
-                            user.isActive
-                              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
-                              : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                          }`}
-                        >
-                          {user.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
+                        {/* Actions */}
+                        <td className="px-6 py-4">
+                          <div className="flex justify-end gap-2">
+                            {user.role === "user" && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => openRoleModal(user)}
+                                  title="Make admin"
+                                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400"
+                                >
+                                  <UserCog size={16} />
+                                  Make Admin
+                                </button>
 
-                      {/* Created */}
+                                <button
+                                  type="button"
+                                  onClick={() => openStatusModal(user)}
+                                  title="Change status"
+                                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                >
+                                  <ShieldAlert size={16} />
+                                  Status
+                                </button>
+                              </>
+                            )}
 
-                      <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
-                        {formatDate(user.createdAt)}
-                      </td>
-                    </tr>
-                  ))}
+                            {user.role === "admin" && (
+                              <span className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-400">
+                                <Shield size={15} />
+                                Protected
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -358,68 +479,100 @@ const Users = () => {
             {/* ================================================= */}
 
             <div className="divide-y divide-slate-100 md:hidden dark:divide-slate-800">
-              {filteredUsers.map((user) => (
-                <div key={user._id} className="p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      {user.avatar ? (
-                        <img
-                          src={user.avatar}
-                          alt={user.name}
-                          className="h-10 w-10 shrink-0 rounded-xl object-cover"
-                        />
-                      ) : (
+              {users.map((user) => {
+                const initials = user.name
+                  .trim()
+                  .split(" ")
+                  .map((word) => word.charAt(0))
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase();
+
+                return (
+                  <div key={user._id} className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-sm font-bold text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
-                          {getInitials(user.name)}
+                          {user.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt={user.name}
+                              className="h-full w-full rounded-xl object-cover"
+                            />
+                          ) : (
+                            initials
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-slate-900 dark:text-white">
+                            {user.name}
+                          </p>
+
+                          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                            {user.email}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold capitalize ${getStatusStyle(
+                          user.status,
+                        )}`}
+                      >
+                        {getStatusIcon(user.status)}
+                        {user.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
+                            user.role === "admin"
+                              ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400"
+                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                          }`}
+                        >
+                          {user.role === "admin" ? (
+                            <Shield size={12} />
+                          ) : (
+                            <UserCheck size={12} />
+                          )}
+
+                          {user.role === "admin" ? "Admin" : "User"}
+                        </span>
+
+                        <span className="text-xs text-slate-400">
+                          {formatDate(user.createdAt)}
+                        </span>
+                      </div>
+
+                      {user.role === "user" && (
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => openRoleModal(user)}
+                            title="Make admin"
+                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400"
+                          >
+                            <UserCog size={16} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => openStatusModal(user)}
+                            title="Change status"
+                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                          >
+                            <ShieldAlert size={16} />
+                          </button>
                         </div>
                       )}
-
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold text-slate-900 dark:text-white">
-                          {user.name}
-                        </p>
-
-                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                          {user.email}
-                        </p>
-                      </div>
                     </div>
-
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
-                        user.isActive
-                          ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
-                          : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                      }`}
-                    >
-                      {user.isActive ? "Active" : "Inactive"}
-                    </span>
                   </div>
-
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
-                          user.role === "admin"
-                            ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400"
-                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                        }`}
-                      >
-                        {user.role === "admin" && <ShieldCheck size={13} />}
-
-                        {user.role === "admin" ? "Admin" : "User"}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-slate-400">
-                      Joined{" "}
-                      <span className="font-semibold text-slate-600 dark:text-slate-300">
-                        {formatDate(user.createdAt)}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
@@ -447,8 +600,6 @@ const Users = () => {
             </p>
 
             <div className="flex items-center gap-2">
-              {/* Previous */}
-
               <button
                 type="button"
                 disabled={pagination.page === 1}
@@ -458,21 +609,16 @@ const Users = () => {
                 <ChevronLeft size={17} />
               </button>
 
-              {/* Page numbers */}
-
               {Array.from(
-                {
-                  length: pagination.totalPages,
-                },
+                { length: pagination.totalPages },
                 (_, index) => index + 1,
               )
-                .filter((pageNumber) => {
-                  return (
+                .filter(
+                  (pageNumber) =>
                     pageNumber === 1 ||
                     pageNumber === pagination.totalPages ||
-                    Math.abs(pageNumber - pagination.page) <= 1
-                  );
-                })
+                    Math.abs(pageNumber - pagination.page) <= 1,
+                )
                 .map((pageNumber, index, visiblePages) => {
                   const previousPage = visiblePages[index - 1];
 
@@ -497,8 +643,6 @@ const Users = () => {
                   );
                 })}
 
-              {/* Next */}
-
               <button
                 type="button"
                 disabled={pagination.page === pagination.totalPages}
@@ -511,6 +655,121 @@ const Users = () => {
           </div>
         )}
       </div>
+
+      {/* ===================================================== */}
+      {/* ROLE / STATUS MODAL */}
+      {/* ===================================================== */}
+
+      {selectedUser && actionType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5 dark:border-slate-800">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                  {actionType === "role"
+                    ? "Make User Admin"
+                    : "Change User Status"}
+                </h2>
+
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {selectedUser.name}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={updating}
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              >
+                <X size={19} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {actionType === "role" ? (
+                <>
+                  <div className="flex items-start gap-3 rounded-xl bg-indigo-50 p-4 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300">
+                    <Shield className="mt-0.5 shrink-0" size={19} />
+
+                    <p className="text-sm leading-6">
+                      This will give{" "}
+                      <span className="font-bold">{selectedUser.name}</span>{" "}
+                      admin privileges. Admin accounts have access to the
+                      administration panel.
+                    </p>
+                  </div>
+
+                  <div className="mt-5">
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      New Role
+                    </label>
+
+                    <select
+                      value={actionValue}
+                      onChange={(event) => setActionValue(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    >
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                    <ShieldAlert className="mt-0.5 shrink-0" size={19} />
+
+                    <p className="text-sm leading-6">
+                      Changing the status affects what this user can do in the
+                      application.
+                    </p>
+                  </div>
+
+                  <div className="mt-5">
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      Account Status
+                    </label>
+
+                    <select
+                      value={actionValue}
+                      onChange={(event) => setActionValue(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    >
+                      <option value="active">Active</option>
+                      <option value="restricted">Restricted</option>
+                      <option value="blocked">Blocked</option>
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-800/40">
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={updating}
+                className="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleUpdate}
+                disabled={
+                  updating ||
+                  (actionType === "status" &&
+                    actionValue === selectedUser.status)
+                }
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {updating ? "Updating..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
