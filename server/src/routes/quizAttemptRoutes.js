@@ -3,9 +3,10 @@ const express = require("express");
 const {
   getMyQuizAttempts,
   getMyQuizAttemptById,
+  getAllQuizAttempts,
 } = require("../controllers/quizAttemptController.js");
 
-const { protect } = require("../middlewares/authMiddleware.js");
+const { protect, adminOnly } = require("../middlewares/authMiddleware.js");
 
 const router = express.Router();
 
@@ -17,5 +18,8 @@ router.get("/my", getMyQuizAttempts);
 
 // Get one specific attempt
 router.get("/my/:id", getMyQuizAttemptById);
+
+// adminOnly
+router.get("/", protect, adminOnly, getAllQuizAttempts);
 
 module.exports = router;

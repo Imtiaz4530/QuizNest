@@ -6,6 +6,7 @@ import Categories from "../pages/Categories";
 import Exams from "../pages/Exams";
 import Questions from "../pages/Questions";
 import Users from "../pages/Users";
+import QuizHistory from "../pages/QuizHistory";
 
 export const router = createBrowserRouter([
   {
@@ -31,6 +32,10 @@ export const router = createBrowserRouter([
       {
         path: "users",
         element: <Users />,
+      },
+      {
+        path: "attempts",
+        element: <QuizHistory />,
       },
     ],
   },
