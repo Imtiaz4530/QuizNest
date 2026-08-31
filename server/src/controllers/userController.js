@@ -240,8 +240,100 @@ const loginAdmin = async (req, res) => {
   }
 };
 
+const getUsers = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      role = "",
+      isActive = "",
+    } = req.query;
+
+    const currentPage = Math.max(Number(page) || 1, 1);
+
+    const perPage = Math.min(Math.max(Number(limit) || 10, 1), 100);
+
+    const skip = (currentPage - 1) * perPage;
+
+    // Build filter
+    const filter = {};
+
+    // Search by name or email
+    if (search.trim()) {
+      const searchRegex = new RegExp(search.trim(), "i");
+
+      filter.$or = [
+        {
+          name: searchRegex,
+        },
+        {
+          email: searchRegex,
+        },
+      ];
+    }
+
+    // Filter by role
+    if (role) {
+      if (!["user", "admin"].includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid role",
+        });
+      }
+
+      filter.role = role;
+    }
+
+    // Filter by active status
+    if (isActive !== "") {
+      if (!["true", "false"].includes(isActive)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid isActive value",
+        });
+      }
+
+      filter.isActive = isActive === "true";
+    }
+
+    // Get total matching users
+    const total = await User.countDocuments(filter);
+
+    // Get paginated users
+    const users = await User.find(filter)
+      .select("-password")
+      .sort({
+        createdAt: -1,
+      })
+      .skip(skip)
+      .limit(perPage);
+
+    const totalPages = Math.ceil(total / perPage);
+
+    return res.status(200).json({
+      success: true,
+      users,
+      pagination: {
+        page: currentPage,
+        limit: perPage,
+        total,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    console.error("Get users error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching users",
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   loginAdmin,
+  getUsers,
 };
