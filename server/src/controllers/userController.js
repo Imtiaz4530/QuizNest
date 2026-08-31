@@ -331,9 +331,144 @@ const getUsers = async (req, res) => {
   }
 };
 
+const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id).select("-password").lean();
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.error("Get user by ID error:", error);
+
+    // Invalid MongoDB ObjectId
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching the user",
+    });
+  }
+};
+
+const updateUserByAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, role } = req.body;
+
+    // Make sure at least one editable field is provided
+    if (status === undefined && role === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Nothing to update",
+      });
+    }
+
+    // Validate status
+    if (
+      status !== undefined &&
+      !["active", "restricted", "blocked"].includes(status)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user status",
+      });
+    }
+
+    // Validate role
+    if (role !== undefined && !["user", "admin"].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user role",
+      });
+    }
+
+    // Find user
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    /*
+     * Prevent an admin from accidentally
+     * blocking/restricting/demoting themselves.
+     */
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot modify your own admin account",
+      });
+    }
+
+    // Update allowed fields only
+    if (status !== undefined) {
+      user.status = status;
+    }
+
+    if (role !== undefined) {
+      user.role = role;
+    }
+
+    await user.save();
+
+    // Never return password
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      user: userResponse,
+    });
+  } catch (error) {
+    console.error("Update user by admin error:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while updating the user",
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   loginAdmin,
   getUsers,
+  getUserById,
+  updateUserByAdmin,
 };
