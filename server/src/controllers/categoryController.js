@@ -1,4 +1,5 @@
 const Category = require("../models/Category.js");
+const Exam = require("../models/Exam.js");
 
 const createCategory = async (req, res) => {
   try {
@@ -222,6 +223,16 @@ const deleteCategory = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Category not found",
+      });
+    }
+
+    const examCount = await Exam.countDocuments({
+      categoryId: id,
+    });
+    if (examCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete category because it contains exams",
       });
     }
 
