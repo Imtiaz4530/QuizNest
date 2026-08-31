@@ -1,12 +1,6 @@
 import { ArrowRight, CheckCircle2, Trophy, Users, Brain } from "lucide-react";
 import { Link } from "react-router-dom";
-
-import { useAuth } from "../context/AuthContext";
-
 const Home = () => {
-  const { user, token } = useAuth();
-  console.log(user, token);
-
   return (
     <>
       {/* Hero */}
