@@ -1,5 +1,5 @@
-export const AUTH_TOKEN_KEY = "quiznest_token";
-export const AUTH_USER_KEY = "quiznest_user";
+export const AUTH_TOKEN_KEY = "quiznest_admin_token";
+export const AUTH_USER_KEY = "quiznest_admin";
 
 export interface AuthUser {
   id: string;
