@@ -72,26 +72,76 @@ const createQuestion = async (req, res) => {
   }
 };
 
+// const getQuestions = async (req, res) => {
+//   try {
+//     const { examId } = req.query;
+
+//     const filter = {};
+
+//     if (examId) {
+//       filter.examId = examId;
+//     }
+
+//     const questions = await Question.find(filter)
+//       .populate("examId", "title slug")
+//       .sort({
+//         createdAt: -1,
+//       });
+
+//     return res.status(200).json({
+//       success: true,
+//       count: questions.length,
+//       questions,
+//     });
+//   } catch (error) {
+//     console.error("Get questions error:", error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Something went wrong while fetching questions",
+//     });
+//   }
+// };
+
 const getQuestions = async (req, res) => {
   try {
-    const { examId } = req.query;
+    const { examId, page = 1, limit = 10 } = req.query;
 
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const perPage = Math.min(Math.max(Number(limit) || 10, 1), 100);
+
+    const skip = (currentPage - 1) * perPage;
+
+    // Build filter
     const filter = {};
 
     if (examId) {
       filter.examId = examId;
     }
 
+    // Get total matching questions
+    const total = await Question.countDocuments(filter);
+
+    // Get paginated questions
     const questions = await Question.find(filter)
       .populate("examId", "title slug")
       .sort({
         createdAt: -1,
-      });
+      })
+      .skip(skip)
+      .limit(perPage);
+
+    const totalPages = Math.ceil(total / perPage);
 
     return res.status(200).json({
       success: true,
-      count: questions.length,
       questions,
+      pagination: {
+        page: currentPage,
+        limit: perPage,
+        total,
+        totalPages,
+      },
     });
   } catch (error) {
     console.error("Get questions error:", error);
@@ -102,7 +152,6 @@ const getQuestions = async (req, res) => {
     });
   }
 };
-
 const getQuestionById = async (req, res) => {
   try {
     const { id } = req.params;

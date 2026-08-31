@@ -41,7 +41,7 @@ app.use("/api/quizzes", quizRoutes);
 // admin routes
 app.use("/api/categories", categoryRoutes);
 app.use("/api/exams", examRoutes);
-app.use("/api/questions", questionRoutes);
+app.use("/api/admin/questions", questionRoutes);
 app.use("/api/admin/dashboard", dashboardRoutes);
 
 const PORT = process.env.PORT || 5000;
