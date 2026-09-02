@@ -1,6 +1,3 @@
-const dns = require("dns");
-dns.setServers(["172.18.0.26"]);
-
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
@@ -47,7 +44,6 @@ app.use("/api/admin/dashboard", dashboardRoutes);
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
-  console.log("DNS:", dns.getServers());
   await connectDB();
 
   app.listen(PORT, () => {
