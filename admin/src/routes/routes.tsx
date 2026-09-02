@@ -10,6 +10,7 @@ import QuizHistory from "../pages/QuizHistory";
 import Login from "../pages/Login";
 import AdminRoute from "./AdminRoute";
 import GuestRoute from "./GuestRoute";
+import Leaderboard from "../pages/Leaderboard";
 
 export const router = createBrowserRouter([
   {
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
           {
             path: "attempts",
             element: <QuizHistory />,
+          },
+          {
+            path: "leaderboard",
+            element: <Leaderboard />,
           },
         ],
       },
