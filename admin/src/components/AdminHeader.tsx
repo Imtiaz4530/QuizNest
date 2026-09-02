@@ -1,10 +1,13 @@
 import { Bell, Menu, Moon, Search, Sun } from "lucide-react";
 import { useState } from "react";
 
+import { getUser } from "../lib/auth";
+
 const AdminHeader = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
+  const user = getUser();
   const toggleTheme = () => {
     setDarkMode((previous) => !previous);
 
@@ -75,15 +78,17 @@ const AdminHeader = () => {
               className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
-                A
+                {user?.name?.charAt(0).toUpperCase() || "A"}
               </div>
 
               <div className="hidden text-left lg:block">
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                  Admin
+                  {user?.name || "Admin"}
                 </p>
 
-                <p className="text-[10px] text-slate-400">Administrator</p>
+                <p className="text-[10px] text-slate-400">
+                  {user?.email || "Administrator"}
+                </p>
               </div>
             </button>
           </div>

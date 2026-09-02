@@ -12,7 +12,9 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+
+import { clearAuthData, getUser } from "../lib/auth";
 
 const navigation = [
   {
@@ -73,7 +75,16 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar = ({ mobileOpen = false, onClose }: AdminSidebarProps) => {
+  const navigate = useNavigate();
   const [desktopCollapsed] = useState(false);
+
+  const user = getUser();
+
+  const handleLogout = () => {
+    clearAuthData();
+    onClose?.();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <>
@@ -191,20 +202,23 @@ const AdminSidebar = ({ mobileOpen = false, onClose }: AdminSidebarProps) => {
         <div className="border-t border-slate-200 p-4 dark:border-slate-800">
           <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
-              A
+              {user?.name?.charAt(0).toUpperCase() || "A"}
             </div>
 
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-slate-800 dark:text-slate-100">
-                Admin
+                {user?.name || "Admin"}
               </p>
 
-              <p className="truncate text-xs text-slate-400">Administrator</p>
+              <p className="truncate text-xs text-slate-400">
+                {user?.email || "Administrator"}
+              </p>
             </div>
 
             <button
               type="button"
               title="Logout"
+              onClick={handleLogout}
               className="rounded-lg p-2 text-slate-400 transition hover:bg-white hover:text-red-500 dark:hover:bg-slate-700"
             >
               <LogOut size={17} />

@@ -9,11 +9,17 @@ import Users from "../pages/Users";
 import QuizHistory from "../pages/QuizHistory";
 import Login from "../pages/Login";
 import AdminRoute from "./AdminRoute";
+import GuestRoute from "./GuestRoute";
 
 export const router = createBrowserRouter([
   {
-    path: "/login",
-    element: <Login />,
+    element: <GuestRoute />,
+    children: [
+      {
+        path: "/login",
+        element: <Login />,
+      },
+    ],
   },
 
   {
