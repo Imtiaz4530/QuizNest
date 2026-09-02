@@ -19,8 +19,6 @@ export const getToken = (): string | null => {
   return localStorage.getItem(AUTH_TOKEN_KEY);
 };
 
-console.log(getToken());
-
 export const getUser = (): AuthUser | null => {
   const user = localStorage.getItem(AUTH_USER_KEY);
 

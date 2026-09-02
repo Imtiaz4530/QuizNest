@@ -205,7 +205,7 @@ const loginAdmin = async (req, res) => {
     // Create JWT
     const token = jwt.sign(
       {
-        id: admin._id,
+        userId: admin._id,
         role: admin.role,
       },
       process.env.JWT_SECRET,
