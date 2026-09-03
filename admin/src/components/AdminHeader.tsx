@@ -3,8 +3,11 @@ import { useState } from "react";
 
 import { getUser } from "../lib/auth";
 
-const AdminHeader = () => {
-  const [mobileOpen, setMobileOpen] = useState(false);
+interface AdminHeaderProps {
+  onMenuClick: () => void;
+}
+
+const AdminHeader = ({ onMenuClick }: AdminHeaderProps) => {
   const [darkMode, setDarkMode] = useState(false);
 
   const user = getUser();
@@ -22,7 +25,7 @@ const AdminHeader = () => {
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              onClick={() => setMobileOpen(true)}
+              onClick={() => onMenuClick()}
               className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 lg:hidden dark:hover:bg-slate-800 dark:hover:text-white"
             >
               <Menu size={21} />
@@ -96,12 +99,13 @@ const AdminHeader = () => {
       </header>
 
       {/* Mobile sidebar controller event */}
-      {mobileOpen && (
-        <div className="lg:hidden">
-          {/* This state will be moved into AdminLayout when we connect the
+      {/* {mobileOpen && (
+        the div will be here
+      )} */}
+      <div className="lg:hidden">
+        {/* This state will be moved into AdminLayout when we connect the
               sidebar and header together. */}
-        </div>
-      )}
+      </div>
     </>
   );
 };
