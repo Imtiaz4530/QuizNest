@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+import path from "path";
 const dotenv = require("dotenv");
 
 const connectDB = require("./config/db");
@@ -22,8 +23,8 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("API is running...");
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(process.cwd(), "public", "api-status.html"));
 });
 
 app.get("/api/health", (req, res) => {
