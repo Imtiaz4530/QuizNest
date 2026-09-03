@@ -1,4 +1,4 @@
-import { FormEvent } from "react";
+import { type FormEvent } from "react";
 
 export interface ProfileUser {
   _id: string;
@@ -62,9 +62,17 @@ export interface ProfileFormProps {
   updateSocialLink: (field: keyof SocialLinks, value: string) => void;
 }
 
+export interface QuizStats {
+  quizzesCompleted: number;
+  questionsAnswered: number;
+  averageScore: number;
+}
+
 // Profile View
 export interface ProfileViewProps {
   profile: ProfileData;
   initials: string;
   memberSince: string;
+  statsLoading: boolean;
+  quizStats: QuizStats;
 }

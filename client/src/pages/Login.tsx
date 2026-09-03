@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";

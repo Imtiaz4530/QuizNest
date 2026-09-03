@@ -1,7 +1,6 @@
-import { BarChart3, Loader2, Pencil, Trophy } from "lucide-react";
-import { FormEvent, useEffect, useState } from "react";
+import { Loader2, Pencil } from "lucide-react";
+import { type FormEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
 
 import api from "../lib/axios";
 import ProfileForm from "../components/ProfileForm";
@@ -79,13 +78,13 @@ const Profile = () => {
           0,
         );
 
-        const totalCorrect = attempts.reduce((total: number, attempt: any) => {
-          return (
-            total +
-            (attempt.answers?.filter((answer: any) => answer.isCorrect)
-              .length || 0)
-          );
-        }, 0);
+        // const totalCorrect = attempts.reduce((total: number, attempt: any) => {
+        //   return (
+        //     total +
+        //     (attempt.answers?.filter((answer: any) => answer.isCorrect)
+        //       .length || 0)
+        //   );
+        // }, 0);
 
         const totalScore = attempts.reduce(
           (total: number, attempt: any) => total + attempt.score,

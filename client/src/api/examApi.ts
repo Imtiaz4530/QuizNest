@@ -14,6 +14,8 @@ export interface Exam {
   isActive: boolean;
   isPopular: boolean;
   order: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ExamPagination {
@@ -44,3 +46,13 @@ export const getExams = async (
 
   return response.data;
 };
+
+export interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+  isActive: boolean;
+  order: number;
+}

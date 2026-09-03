@@ -1,7 +1,18 @@
 import { BarChart3, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const ProfileStats = ({ statsLoading, quizStats }) => {
+interface QuizStats {
+  quizzesCompleted: number;
+  questionsAnswered: number;
+  averageScore: number;
+}
+
+interface ProfileStatsProps {
+  statsLoading: boolean;
+  quizStats: QuizStats;
+}
+
+const ProfileStats = ({ statsLoading, quizStats }: ProfileStatsProps) => {
   return (
     <>
       {/* Quiz Statistics */}
